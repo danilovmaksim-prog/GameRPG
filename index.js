@@ -11,7 +11,7 @@ class Character {
         this.name = name;
         this.health = health;
         this.level = level;
-        this.inventory = [];
+        this.inventory = new Map();
     }
 
     takeDamage(amount) {
@@ -19,9 +19,24 @@ class Character {
         console.log(`${this.name} получил ${amount} урона. Здоровье: ${this.health}`);
     }
 
-    addItem(item) {
-        this.inventory.push(item);
-        console.log(`${this.name} получил предмет: ${item}`);
+    addItem(itemName, count = 1) {
+        let current = this.inventory.get(itemName) || 0;
+        this.inventory.set(itemName, current + count);
+        console.log(`${this.name} получил: ${count} - ${itemName}`);
+    }
+
+    showInvetory() {
+        console.log(`\n === Инвентарь ===`);
+
+        if(player.inventory.size === 0) {
+            console.log("Пусто");
+        } else {
+            for (const [item, quantity] of this.inventory) {
+                console.log(`  ${item}: ${quantity} шт.`);
+            }
+        }
+        
+      
     }
 
     loadSaved(playerSaved) {
@@ -29,6 +44,7 @@ class Character {
         console.log('Данные загружены в персонажа');
         return this;
     }
+
 }
 
 const player = new Character(playerName);
@@ -65,12 +81,7 @@ while(gameRunning) {
         break;
 
         case "2":
-            console.log(`=== Инвентарь ===`);
-            if(player.inventory.length === 0) {
-                console.log("Пусто");
-            } else {
-                player.inventory.forEach((item, index) => console.log(`${index + 1}. ${item}`));
-            }
+           player.showInvetory();
         break;
 
         case "3":
