@@ -7,10 +7,17 @@ const playerName = prompt("Как вас зовут герой? ");
 console.log("приветсвуем, " + playerName + " Ваше приключение начинается ...");
 
 class Character {
-    constructor(name, health = 100, level = 1) {
+    constructor(name, health = 100, level = 1, experiance = 0) {
         this.name = name;
+        this.maxHealth = 100;
         this.health = health;
         this.level = level;
+        this.experiance = experiance;
+        this.equiped = {
+            'armor': null,
+            'weapon': null
+        }
+
         this.inventory = new Map();
     }
 
@@ -28,23 +35,14 @@ class Character {
     showInvetory() {
         console.log(`\n === Инвентарь ===`);
 
-        if(player.inventory.size === 0) {
+        if(this.inventory.size === 0) {
             console.log("Пусто");
         } else {
             for (const [item, quantity] of this.inventory) {
                 console.log(`  ${item}: ${quantity} шт.`);
             }
-        }
-        
-      
+        }   
     }
-
-    loadSaved(playerSaved) {
-        Object.assign(this, playerSaved);
-        console.log('Данные загружены в персонажа');
-        return this;
-    }
-
 }
 
 const player = new Character(playerName);
@@ -60,7 +58,7 @@ while(gameRunning) {
         Что вы хотите сделать? 
         1. Иследовать лес
         2. Проверить инвентарь
-        3. Сохранинить игру
+        3. Сохранить игру
         4. Загрузить сохранение
         5. Выйти`);
     
@@ -85,9 +83,7 @@ while(gameRunning) {
         break;
 
         case "3":
-            saveGame(player)
-                .then(() => console.log("Игра Сохранена"))
-                .catch(err => console.error("Ошибка сохранения", err));
+            saveGame(player);
         break;
 
         case "4": 
@@ -111,17 +107,25 @@ while(gameRunning) {
 
 // function for saveGame in JSON
 function saveGame(player) {
-    return new Promise((resolve, reject) => {
-        const data = JSON.stringify(player, null, 2);
+    try {
+        const savedData = {
+            name: player.name,
+            maxHealth: player.maxHealth,
+            health: player.health,
+            level: player.level,
+            experiance: player.experiance,
+            equiped: player.equiped,
+            inventory: Array.from(player.inventory.entries())
+        }
 
-        fs.writeFile('savegame.json', data, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        })
-    })
+        fs.writeFileSync('savegame.json', JSON.stringify(savedData, null, 2));
+        console.log("Игра сохранена!");
+        return true;
+
+    } catch (err) {
+        console.error("Ошибка сохранения", err);
+        return false;
+    }
 };
 
 // Inspect, if is saveGame
@@ -145,13 +149,20 @@ function loadGameSync() {
         const data = fs.readFileSync('savegame.json', 'utf8');
         const savedData = JSON.parse(data);
 
-        Object.keys(savedData).forEach(key => player[key] = savedData[key]);
+        player.name = savedData.name;
+        player.maxHealth = savedData.maxHealth;
+        player.health = savedData.health;
+        player.level = savedData.level;
+        player.experiance = savedData.experiance;
+        player.equiped = savedData.equiped;
+        player.inventory = new Map(savedData.inventory || []);
+
+        
 
         console.log('=== Игра загружена! ===');
         console.log(`Имя: ${player.name}`);
-        console.log(`Здоровье: ${player.health}`);
-        console.log(`Уровень: ${player.level}`);
-        console.log(`Инвентарь: ${player.inventory.join(', ') || 'пусто'}`);
+        console.log(`Уровень: ${player.level} (Опыт: ${player.experiance})`);
+        console.log(`Здоровье: ${player.maxHealth}/${player.health}`);
         console.log('=======================');
         return true;
     } catch (err) {
