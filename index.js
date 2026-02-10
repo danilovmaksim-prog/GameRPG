@@ -43,6 +43,32 @@ class Character {
             }
         }   
     }
+
+    useItem(itemName) {
+        let current = this.inventory.get(itemName);
+
+        if(!current || current <= 0) {
+            console.log(`У вас нет такое инвентаря`);
+            return false;
+        }
+
+        switch (itemName) {
+            case "Зелье здоровья":
+                this.health = Math.min(this.maxHealth, this.health + 30);
+                console.log("Вы востановили 30 здоровья");
+            break;
+            default:
+                console.log("Вы использовали зелье")
+        } 
+
+        let newCurrent = current - 1;
+        if(newCurrent <= 0) {
+            this.inventory.delete(itemName);
+        } else {
+            this.inventory.set(itemName, newCurrent);
+        }
+        return true;        
+    }
 }
 
 const player = new Character(playerName);
